@@ -17,7 +17,6 @@ var logger *slog.Logger
 
 func serverInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		// メタデータからトレースIDを取得
 		var traceID string
 		if md, ok := metadata.FromIncomingContext(ctx); ok {
 			if values := md.Get("trace-id"); len(values) > 0 {
@@ -25,21 +24,16 @@ func serverInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
 			}
 		}
 
-		// リクエストログ
 		logger.Info("gRPC server request",
 			"trace_id", traceID,
 			"method", info.FullMethod,
-			"request", req,
 		)
 
-		// 実際のハンドラーの呼び出し
 		resp, err := handler(ctx, req)
 
-		// レスポンスログ
 		logger.Info("gRPC server response",
 			"trace_id", traceID,
 			"method", info.FullMethod,
-			"response", resp,
 			"error", err,
 		)
 
